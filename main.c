@@ -1,30 +1,45 @@
+#include <time.h>
 #include <ncurses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "worm.h"
 
+#define SHROOM_CHANCE 50
+
 void printworm(struct seg *back);
 struct seg* moveworm(struct seg *back, char key);
 struct seg* getfront(struct seg *n);
+struct snack* gensnack(int x, int y, int points, bool shroom);
+void managesnacks(bool *avail, struct snack **snk);
+void eatsnacks(struct snack *snk, struct seg *front, bool *avail);
+void printsnacks(struct snack *snk, bool *avail);
+void growsnake(struct seg *front);
 
-
+int points;
 int main(int argc, char *argv[]) {
+	points = 0;
+	bool snacksavailable = false;
+	struct snack *snk;
+	srand(time(NULL));
 	bool alive = true;
 	struct seg *back = (struct seg*) initworm(20, 5, 0);
 	printf("initialised worm\n");
-	printf("%c", 'u');
 	initscr();
+	init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 	noecho();
 	nodelay(stdscr, true);
 	int i;
 	char key;
 	while(alive) {
 	mvprintw(0,0,"%d", getfront(back)->x);
+		managesnacks(&snacksavailable, &snk);
+		eatsnacks(snk, getfront(back), &snacksavailable);
 		erase();
+		printsnacks(snk, &snacksavailable);
 		printworm(back);
+		usleep(100000);
 		key = getch();
 		back = moveworm(back, key);
-		usleep(100000);
 		refresh();
 	}
 	endwin();
@@ -90,4 +105,48 @@ struct seg* getfront(struct seg *n) {
 		cur = cur->succ;
 	}
 	return cur;
+}
+
+struct snack* gensnack(int x, int y, int points, bool shroom) {
+	struct snack *snack = (struct snack*) malloc(sizeof(struct snack));
+	snack->shroom = shroom;
+	snack->points = points;
+	snack->x = x;
+	snack->y = y;
+	return snack;
+}
+
+void managesnacks(bool *avail, struct snack **snk) {
+	if(!*avail) {
+		*snk = gensnack(rand()%50 + 1, rand()%50 + 1, rand()%4+1, ((rand()%100) < SHROOM_CHANCE)?true:false);
+		*avail = true;
+	}
+}
+
+void eatsnacks(struct snack *snk, struct seg *front, bool *avail) {
+	if(*avail) {
+		if(front->x == snk->x && front->y == snk->y) {
+			points+=snk->points;
+			*avail = false;
+			if(snk->shroom) {
+				//do something awesome!
+			}
+			free(snk);
+			//growsnake(front);	
+		}
+	}
+}
+
+void printsnacks(struct snack *snk, bool *avail) {
+	attron(1);
+	if(*avail) {
+		mvprintw(snk->y, snk->x, "#");
+		mvprintw(0,0,"x:%d, y:%d", snk->x, snk->y);
+	}
+	attroff(1);
+}
+
+void growsnake(struct seg *front) {
+	front->front = 0;
+	front->succ = (struct seg *) malloc(sizeof(struct seg));
 }
