@@ -14,7 +14,7 @@ void managesnacks(bool *avail, struct snack **snk);
 void eatsnacks(struct snack *snk, struct seg *front, bool *avail);
 void printsnacks(struct snack *snk, bool *avail);
 void growsnake(struct seg *front);
-
+void addfrontsegment(struct seg* back, struct seg *newseg, char dir);
 int points;
 int main(int argc, char *argv[]) {
 	points = 0;
@@ -71,29 +71,8 @@ struct seg* moveworm(struct seg *back, char key) {
 	}else if(key == DOWN) {
 		dir = DOWN;
 	}
-	front->dir = dir;
-	front->front = 0;
-	front->succ = back;
-	switch(front->dir) {
-		case RIGHT:{
-			front->succ->x = front->x + 1;
-			front->succ->y = front->y;
-		}break;
-		case LEFT:{
-			front->succ->x = front->x - 1;
-			front->succ->y = front->y;
-		}break;
-		case UP:{
-			front->succ->x = front->x;
-			front->succ->y = front->y - 1;
-		}break;
-		case DOWN:{
-			front->succ->x = front->x;
-			front->succ->y = front->y + 1;
-		}
-	}
-	front->succ->dir = front->dir;
-	front->succ->front = 1;
+	//REPLACE WITH ADD TO FRONT METHOD
+	addfrontsegment(newback, back, dir);
 	return newback;
 }
 
@@ -123,6 +102,33 @@ void managesnacks(bool *avail, struct snack **snk) {
 	}
 }
 
+void addfrontsegment(struct seg* back, struct seg *newseg, char dir) {
+	struct seg *front = getfront(back);
+	front->dir = dir;
+	front->front = 0;
+	front->succ = newseg;
+	switch(front->dir) {
+		case RIGHT:{
+			front->succ->x = front->x + 1;
+			front->succ->y = front->y;
+		}break;
+		case LEFT:{
+			front->succ->x = front->x - 1;
+			front->succ->y = front->y;
+		}break;
+		case UP:{
+			front->succ->x = front->x;
+			front->succ->y = front->y - 1;
+		}break;
+		case DOWN:{
+			front->succ->x = front->x;
+			front->succ->y = front->y + 1;
+		}
+	}
+	front->succ->dir = front->dir;
+	front->succ->front = 1;
+}
+
 void eatsnacks(struct snack *snk, struct seg *front, bool *avail) {
 	if(*avail) {
 		if(front->x == snk->x && front->y == snk->y) {
@@ -132,7 +138,7 @@ void eatsnacks(struct snack *snk, struct seg *front, bool *avail) {
 				//do something awesome!
 			}
 			free(snk);
-			//growsnake(front);	
+			growsnake(front);	
 		}
 	}
 }
@@ -146,7 +152,7 @@ void printsnacks(struct snack *snk, bool *avail) {
 	attroff(1);
 }
 
-void growsnake(struct seg *front) {
-	front->front = 0;
-	front->succ = (struct seg *) malloc(sizeof(struct seg));
+void growsnake(struct seg *back) {
+	struct seg *newseg = (struct seg *) malloc(sizeof(struct seg));
+	addfrontsegment(back, newseg, getfront(back)->dir);
 }
