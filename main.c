@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
 	struct seg *back = (struct seg*) initworm(20, 5, 0);
 	printf("initialised worm\n");
 	initscr();
+	start_color();
 	init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 	noecho();
 	nodelay(stdscr, true);
@@ -97,7 +98,7 @@ struct snack* gensnack(int x, int y, int points, bool shroom) {
 
 void managesnacks(bool *avail, struct snack **snk) {
 	if(!*avail) {
-		*snk = gensnack(rand()%50 + 1, rand()%50 + 1, rand()%4+1, ((rand()%100) < SHROOM_CHANCE)?true:false);
+		*snk = gensnack(rand()%30 + 1, rand()%30 + 1, rand()%4+1, ((rand()%100) < SHROOM_CHANCE)?true:false);
 		*avail = true;
 	}
 }
@@ -144,12 +145,12 @@ void eatsnacks(struct snack *snk, struct seg *front, bool *avail) {
 }
 
 void printsnacks(struct snack *snk, bool *avail) {
-	attron(1);
+	attron(COLOR_PAIR(1));
 	if(*avail) {
 		mvprintw(snk->y, snk->x, "#");
 		mvprintw(0,0,"x:%d, y:%d", snk->x, snk->y);
 	}
-	attroff(1);
+	attroff(COLOR_PAIR(1));
 }
 
 void growsnake(struct seg *back) {
