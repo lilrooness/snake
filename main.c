@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "worm.h"
+#include <sys/ioctl.h>
 
 #define SHROOM_CHANCE 50
 
@@ -16,7 +17,11 @@ void printsnacks(struct snack *snk, bool *avail);
 void growsnake(struct seg *front);
 void addfrontsegment(struct seg* back, struct seg *newseg, char dir);
 int points;
+struct winsize w;
+
 int main(int argc, char *argv[]) {
+	ioctl(0, TIOCGWINSZ, &w);
+	printf("width:%d, height:%d", w.ws_row, w.ws_col);
 	points = 0;
 	bool snacksavailable = false;
 	struct snack *snk;
@@ -98,7 +103,7 @@ struct snack* gensnack(int x, int y, int points, bool shroom) {
 
 void managesnacks(bool *avail, struct snack **snk) {
 	if(!*avail) {
-		*snk = gensnack(rand()%30 + 1, rand()%30 + 1, rand()%4+1, ((rand()%100) < SHROOM_CHANCE)?true:false);
+		*snk = gensnack(rand()%w.ws_col, rand()%w.ws_row, rand()%4+1, ((rand()%100) < SHROOM_CHANCE)?true:false);
 		*avail = true;
 	}
 }
