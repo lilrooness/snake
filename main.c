@@ -16,6 +16,10 @@ void eatsnacks(struct snack *snk, struct seg *front, bool *avail);
 void printsnacks(struct snack *snk, bool *avail);
 void growsnake(struct seg *front);
 void addfrontsegment(struct seg* back, struct seg *newseg, char dir);
+bool checkcollisions(struct seg* back);
+void endgame(struct seg *back);
+bool selfintersection(struct seg *back);
+
 int points;
 struct winsize w;
 
@@ -37,7 +41,7 @@ int main(int argc, char *argv[]) {
 	int i;
 	char key;
 	while(alive) {
-	mvprintw(0,0,"%d", getfront(back)->x);
+		mvprintw(0,0,"%d", getfront(back)->x);
 		managesnacks(&snacksavailable, &snk);
 		eatsnacks(snk, getfront(back), &snacksavailable);
 		erase();
@@ -47,11 +51,18 @@ int main(int argc, char *argv[]) {
 		key = getch();
 		back = moveworm(back, key);
 		refresh();
+		if(checkcollisions(back) == true) {
+			endgame(back);
+			return 0;
+		}
 	}
-	endwin();
-
-	delsegs(back);
+	endgame(back);
 	return 0;
+}
+
+void endgame(struct seg *back) {
+	endwin();
+	delsegs(back);
 }
 
 void printworm(struct seg *back) {
@@ -161,4 +172,31 @@ void printsnacks(struct snack *snk, bool *avail) {
 void growsnake(struct seg *back) {
 	struct seg *newseg = (struct seg *) malloc(sizeof(struct seg));
 	addfrontsegment(back, newseg, getfront(back)->dir);
+}
+
+//returns true if self intersection is true or if bounderies are reached
+bool checkcollisions(struct seg *back) {
+	//first check wall collisions
+	struct seg *front = getfront(back);
+	if(front->x > w.ws_col || front->x < 0 || front->y > w.ws_row || front->y < 0) {
+		return true;
+	}else if(selfintersection(back)){
+		return true;
+	}else {
+		return false;
+	}
+}
+
+//returns true if the head is touching any part of the body
+bool selfintersection(struct seg *back) {
+	struct seg *front = getfront(back);
+	struct seg *current = back;
+	while(current->front == 0) {
+		if(current->x == front->x && current->y == front->y) {
+			return true;
+		}else {
+			current = current->succ;
+		}
+	}
+	return false;
 }
