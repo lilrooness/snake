@@ -20,10 +20,18 @@ bool checkcollisions(seg* back);
 void endgame(seg *back);
 bool selfintersection(seg *back);
 
+#define NORMAL 0
+#define CRAZY_COLOR 1
+#define NUTMEG 2
+#define WHATEVEN 3
+
+int effecttimecounter = 10; //the amount of ticsk shrooms have an effect for
 int points;
 struct winsize w;
+int mode;
 
 int main(int argc, char *argv[]) {
+	mode = NORMAL;
 	ioctl(0, TIOCGWINSZ, &w);
 	printf("width:%d, height:%d", w.ws_row, w.ws_col);
 	points = 0;
@@ -36,6 +44,7 @@ int main(int argc, char *argv[]) {
 	printf("initialised worm\n");
 
 	initscr();
+	curs_set(0);
 	start_color();
 	init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 	noecho();
@@ -53,17 +62,16 @@ int main(int argc, char *argv[]) {
 		printsnacks(snk, &snacksavailable);
 		printworm(back);
 		
-		usleep(100000);
-		
+		if(checkcollisions(back) == true) {
+			alive = false;
+		}
+		if(mode == NORMAL) {
+			usleep(100000);
+		}
 		key = getch();
 		back = moveworm(back, key);
 		
 		refresh();
-
-		if(checkcollisions(back)) {
-			endgame(back);
-			return 0;
-		}
 	}
 	endgame(back);
 	return 0;
@@ -77,10 +85,12 @@ void endgame(seg *back) {
 void printworm(seg *back) {
 	int front = 0;
 	seg *cur = back;
-	while(front != 1) {
-		front = cur->front;
-		mvprintw(cur->y, cur->x, "#");
-		cur = cur->succ;
+	if(mode == NORMAL){
+		while(front != 1) {
+			front = cur->front;
+			mvprintw(cur->y, cur->x, "#");
+			cur = cur->succ;
+		}
 	}
 }
 
@@ -160,7 +170,7 @@ void eatsnacks(snack *snk, seg *front, bool *avail) {
 			points+=snk->points;
 			*avail = false;
 			if(snk->shroom) {
-				//do something awesome!
+			//	mode = NUTMEG;
 			}
 			free(snk);
 			growsnake(front);	
