@@ -50,6 +50,10 @@ int main(int argc, char *argv[]) {
 	noecho();
 	nodelay(stdscr, true);
 	char key;
+	struct timespec reqtime;
+    	reqtime.tv_sec = 0;
+    	reqtime.tv_nsec = 100000000;
+
 
 	while(alive) {
 		mvprintw(0,0,"%d", getfront(back)->x);
@@ -61,7 +65,8 @@ int main(int argc, char *argv[]) {
 
 		printsnacks(snk, &snacksavailable);
 		printworm(back);
-		
+		nanosleep(&reqtime, NULL);
+
 		if(checkcollisions(back) == true) {
 			alive = false;
 		}
