@@ -65,8 +65,7 @@ int main(int argc, char *argv[]) {
 
 		printsnacks(snk, &snacksavailable);
 		printworm(back);
-		nanosleep(&reqtime, NULL);
-
+	
 		if(checkcollisions(back) == true) {
 			alive = false;
 		}
