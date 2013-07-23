@@ -32,25 +32,39 @@ int main(int argc, char *argv[]) {
 	srand(time(NULL));
 	bool alive = true;
 	struct seg *back = (struct seg*) initworm(20, 5, 0);
+	
 	printf("initialised worm\n");
+	
 	initscr();
 	start_color();
 	init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 	noecho();
 	nodelay(stdscr, true);
-	int i;
+
+	struct timespec reqtime;
+    reqtime.tv_sec = 0;
+    reqtime.tv_nsec = 100000000;
+
 	char key;
+	
 	while(alive) {
 		mvprintw(0,0,"%d", getfront(back)->x);
+	
 		managesnacks(&snacksavailable, &snk);
 		eatsnacks(snk, getfront(back), &snacksavailable);
+	
 		erase();
+	
 		printsnacks(snk, &snacksavailable);
 		printworm(back);
-		usleep(100000);
+	
+		nanosleep(&reqtime, NULL);
+	
 		key = getch();
 		back = moveworm(back, key);
+	
 		refresh();
+	
 		if(checkcollisions(back) == true) {
 			endgame(back);
 			return 0;
