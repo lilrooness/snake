@@ -24,19 +24,21 @@ struct seg {
 	char dir;
 };
 
-struct snack {
+typedef struct seg seg;
+
+typedef struct {
 	int x;
 	int y;
 	int points;
 	bool shroom;
-};
+} snack;
 
 /*
 *  A recursive function to create s simple linked list of type struct seg
 *
 */
-struct seg* initworm(int len, int y, int startx) {
-	struct seg *n = (struct seg*) malloc(sizeof(struct seg));
+seg* initworm(int len, int y, int startx) {
+	seg *n = (seg*) malloc(sizeof(seg));
 	n->x = startx;
 	n->y = y;
 	n->front = 0;
@@ -55,10 +57,10 @@ struct seg* initworm(int len, int y, int startx) {
 *  Deletes all nodes in the list starting with seg
 *
 */
-void delsegs(struct seg *first) {
+void delsegs(seg *first) {
 	int front = 0;
-	struct seg *ptr = first;
-	struct seg *tmp;
+	seg *ptr = first;
+	seg *tmp;
 	while(front ==0) {
 		front = ptr->front;
 		tmp = ptr->succ;
