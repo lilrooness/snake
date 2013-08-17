@@ -1,11 +1,11 @@
 CC=gcc
 
-CFLAGS=-Wall 
+CFLAGS=-w
 
 all: snake
 
 snake: main.c worm.h; \
-        $(CC) $(CFLAGS) -lncurses worm.h main.c -o snake
+        $(CC) $(CFLAGS) -I /usr/include/lua5.2 -llua5.2 -lncurses worm.h main.c -o snake
        
 clean: ;\
         rm -f *.o snake

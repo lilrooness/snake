@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "worm.h"
 #include <sys/ioctl.h>
+#include <lua.h>
+#include <lauxlib.h>
 
 #define SHROOM_CHANCE 50
 
@@ -15,10 +17,13 @@ void managesnacks(bool *avail, snack **snk);
 void eatsnacks(snack *snk, seg *front, bool *avail);
 void printsnacks(snack *snk, bool *avail);
 void growsnake(seg *front);
+void growsnake_lua(lua_State *L);
 void addfrontsegment(seg* back, seg *newseg, char dir);
 bool checkcollisions(seg* back);
 void endgame(seg *back);
 bool selfintersection(seg *back);
+void init_lua(lua_State *l);
+void printhash_lua(lua_State *l);
 
 #define NORMAL 0
 #define CRAZY_COLOR 1
@@ -29,8 +34,12 @@ int effecttimecounter = 10; //the amount of ticsk shrooms have an effect for
 int points;
 struct winsize w;
 int mode;
+seg *ref;
+lua_State *L;
 
 int main(int argc, char *argv[]) {
+	L = luaL_newstate();
+	init_lua(L);
 	mode = NORMAL;
 	ioctl(0, TIOCGWINSZ, &w);
 	printf("width:%d, height:%d", w.ws_row, w.ws_col);
@@ -40,7 +49,7 @@ int main(int argc, char *argv[]) {
 	srand(time(NULL));
 	bool alive = true;
 	seg *back = (seg*) initworm(20, 5, 0);
-
+	ref = getfront(back);
 	printf("initialised worm\n");
 
 	initscr();
@@ -57,12 +66,13 @@ int main(int argc, char *argv[]) {
 
 	while(alive) {
 		mvprintw(0,0,"%d", getfront(back)->x);
-
+		
 		managesnacks(&snacksavailable, &snk);
 		eatsnacks(snk, getfront(back), &snacksavailable);
 
 		erase();
-
+		lua_getglobal(L, "tick");
+		lua_pcall(L, 0, 0, 0);
 		printsnacks(snk, &snacksavailable);
 		printworm(back);
 	
@@ -177,7 +187,8 @@ void eatsnacks(snack *snk, seg *front, bool *avail) {
 			//	mode = NUTMEG;
 			}
 			free(snk);
-			growsnake(front);	
+                        lua_getglobal(L, "eat_snack");
+			lua_pcall(L, 0, 0, 0);
 		}
 	}
 }
@@ -221,4 +232,27 @@ bool selfintersection(seg *back) {
 		}
 	}
 	return false;
+}
+
+void init_lua(lua_State *l) {
+  luaL_dofile(l, "controller.lua");
+  lua_register(l, "growsnake", growsnake_lua);
+  lua_register(l, "printhash", printhash_lua);
+  lua_pushinteger(l, w.ws_row);
+  lua_setglobal(l, "WIN_HEIGHT");
+  lua_pushinteger(l, w.ws_col);
+  lua_setglobal(l, "WIN_WIDTH");
+}
+
+void growsnake_lua(lua_State *L) {
+  seg *front = getfront(ref);
+  growsnake(front);
+}
+
+void printhash_lua(lua_State *L) {
+  int y = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+  int x = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+  mvprintw(y, x, "#");
 }
