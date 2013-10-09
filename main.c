@@ -72,7 +72,8 @@ int main(int argc, char *argv[]) {
 
 		erase();
 		lua_getglobal(L, "tick");
-		lua_pcall(L, 0, 0, 0);
+		lua_pushinteger(L, points);
+		lua_pcall(L, 1, 0, 0);
 		printsnacks(snk, &snacksavailable);
 		printworm(back);
 	
@@ -94,6 +95,7 @@ int main(int argc, char *argv[]) {
 void endgame(seg *back) {
 	endwin();
 	delsegs(back);
+	lua_close(L);
 }
 
 void printworm(seg *back) {
@@ -181,7 +183,8 @@ void addfrontsegment(seg* back, seg *newseg, char dir) {
 void eatsnacks(snack *snk, seg *front, bool *avail) {
 	if(*avail) {
 		if(front->x == snk->x && front->y == snk->y) {
-			points+=snk->points;
+			//points+=snk->points;
+			points += 1;
 			*avail = false;
 			if(snk->shroom) {
 			//	mode = NUTMEG;
