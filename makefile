@@ -9,3 +9,6 @@ snake: main.c worm.h; \
        
 clean: ;\
         rm -f *.o snake
+
+osx:
+	$(CC) $(CFLAGS) -I /usr/include/lua52 -llua -lncurses worm.h main.c -o snake
